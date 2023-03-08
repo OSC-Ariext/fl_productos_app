@@ -1,8 +1,11 @@
 import 'package:fl_productos_app/providers/login_provider.dart';
+import 'package:fl_productos_app/services/notifications_service.dart';
 import 'package:fl_productos_app/ui/input_decoration.dart';
 import 'package:fl_productos_app/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../services/auth_services.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -118,19 +121,25 @@ class _LoginForm extends StatelessWidget {
                 elevation: 0,
                 color: Colors.deepPurple,
                 onPressed: loginFormProvider.isLoading ? null : () async {
-                  
                   FocusScope.of(context).unfocus();
-                  
+                  final authServices = Provider.of<AuthServices>(context, listen: false);
+
                   if(!loginFormProvider.isValidForm()) return;
 
                   loginFormProvider.isLoading = true;
 
-                  await Future.delayed(const Duration(seconds: 2));
+                  final String? errorMessage = await authServices.login(loginFormProvider.email, loginFormProvider.password);
 
-                  //TODO: Validar si es correcto
-                  loginFormProvider.isLoading = false;
-                  
-                  Navigator.pushReplacementNamed(context, 'home');
+                  if(errorMessage == null){
+                    Navigator.pushReplacementNamed(context, 'home');
+                  } else {
+                    //Mostrar error
+                    print(errorMessage);
+                    // NotificationService.showSnackBar(errorMessage);
+                    NotificationService.showSnackBar(errorMessage);
+                    loginFormProvider.isLoading = false;
+                  }
+
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
