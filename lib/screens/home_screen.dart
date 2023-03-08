@@ -1,3 +1,4 @@
+import 'package:fl_productos_app/models/models.dart';
 import 'package:fl_productos_app/screens/screens.dart';
 import 'package:fl_productos_app/services/product_services.dart';
 import 'package:fl_productos_app/widgets/widgets.dart';
@@ -33,7 +34,12 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: (){
-
+          productService.selectedProduct = Product(
+              available: true,
+              name: '',
+              price: 0.0
+          );
+          Navigator.pushNamed(context, 'product');
         },
       ),
     );

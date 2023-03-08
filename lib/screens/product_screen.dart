@@ -4,7 +4,10 @@ import 'package:fl_productos_app/ui/input_decoration.dart';
 import 'package:fl_productos_app/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+
+
 
 class ProductScreen extends StatelessWidget {
   const ProductScreen({Key? key}) : super(key: key);
@@ -20,6 +23,8 @@ class ProductScreen extends StatelessWidget {
     );
   }
 }
+
+
 
 class _ProductScreenBody extends StatelessWidget {
 
@@ -43,7 +48,7 @@ class _ProductScreenBody extends StatelessWidget {
 
             Stack(
               children: [
-                ProductImage(url: productService.selectedProduct?.picture,),
+                ProductImage(url: productService.selectedProduct.picture,),
                 Positioned(
                     top: 60,
                     left: 20,
@@ -58,8 +63,20 @@ class _ProductScreenBody extends StatelessWidget {
                     top: 60,
                     right: 20,
                     child: IconButton(
-                        onPressed: (){
+                        onPressed: () async {
                           //launch camera
+                          final picker = ImagePicker();
+                          final XFile? pickedFile = await picker.pickImage(
+                            source: ImageSource.camera,
+                            imageQuality: 100
+                          );
+
+                          if(pickedFile == null){
+                            print('No seleccionó nada');
+                            return;
+                          }
+
+                          productService.updateSelectedProductImage(pickedFile.path);
                         },
                         icon: const Icon(Icons.camera_alt_outlined, size: 40, color: Colors.white,)
                     )
@@ -76,14 +93,25 @@ class _ProductScreenBody extends StatelessWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
       floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.save_outlined),
-        onPressed: () async {
+        onPressed: productService.isSaving
+            ? null
+            :() async {
 
-          if(!productForm.isValidForm()) return;
+            if(!productForm.isValidForm()) return;
 
-          await productService.saveOrUpdateProduct(productForm.product);
+            final String? imageUrl = await productService.uploadImage();
+
+            if(imageUrl != null){
+              print("URL NUEVA IMAGE: $imageUrl");
+              productForm.product.picture = imageUrl;
+            }
+
+            await productService.saveOrUpdateProduct(productForm.product);
 
         },
+        child: productService.isSaving
+            ? const CircularProgressIndicator(color: Colors.white,)
+            : const Icon(Icons.save_outlined),
       ),
     );
   }
@@ -176,4 +204,6 @@ class _ProductForm extends StatelessWidget {
         )
       ]
   );
+
+
 }
